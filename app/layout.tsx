@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
           'bg-background text-foreground antialiased',
@@ -26,9 +26,18 @@ export default function RootLayout({
           firaCode.variable,
         )}
       >
-        <Navbar />
-        {children}
-        <TailwindIndicator />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <main className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
+            <Navbar />
+            {children}
+            <TailwindIndicator />
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   )
