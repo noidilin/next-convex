@@ -4,6 +4,7 @@ import { TailwindIndicator } from '@/components/tailwind-indicator'
 import { ThemeProvider } from '@/components/theme-provider'
 import { firaCode, fraunces, merriweatherSans } from '@/lib/fonts'
 import { cn } from '@/lib/utils'
+import { ConvexClientProvider } from '@/components/convex-client-provider'
 
 export const metadata: Metadata = {
   title: 'Next 16',
@@ -31,10 +32,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
-            {children}
-            <TailwindIndicator />
-          </main>
+          <ConvexClientProvider>
+            <main className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
+              {children}
+              <TailwindIndicator />
+            </main>
+          </ConvexClientProvider>
         </ThemeProvider>
       </body>
     </html>
