@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { TailwindIndicator } from '@/components/tailwind-indicator'
-import { ThemeProvider } from '@/components/theme-provider'
+import { ConvexClientProvider } from '@/components/base/convex-client-provider'
+import { TailwindIndicator } from '@/components/base/tailwind-indicator'
+import { ThemeProvider } from '@/components/base/theme-provider'
 import { firaCode, fraunces, merriweatherSans } from '@/lib/fonts'
 import { cn } from '@/lib/utils'
-import { ConvexClientProvider } from '@/components/convex-client-provider'
 
 export const metadata: Metadata = {
   title: 'Next 16',
