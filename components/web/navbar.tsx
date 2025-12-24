@@ -27,7 +27,7 @@ export default function Navbar() {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <Link href="/auth/sign-up" className={buttonVariants()}>
+        <Link href="/auth/register" className={buttonVariants()}>
           Sign up
         </Link>
         <Link

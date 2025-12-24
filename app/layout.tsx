@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { TailwindIndicator } from '@/components/tailwind-indicator'
 import { ThemeProvider } from '@/components/theme-provider'
-import Navbar from '@/components/web/navbar'
 import { firaCode, fraunces, merriweatherSans } from '@/lib/fonts'
 import { cn } from '@/lib/utils'
 
@@ -33,7 +32,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <main className="mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8">
-            <Navbar />
             {children}
             <TailwindIndicator />
           </main>
