@@ -21,8 +21,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { authClient } from '@/lib/auth-client'
 import { loginSchema } from '@/lib/schemas'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
+  const router = useRouter()
   const form = useForm({
     defaultValues: {
       email: '',
@@ -35,9 +38,19 @@ export default function LoginPage() {
       await authClient.signIn.email({
         email: value.email,
         password: value.password,
+        fetchOptions: {
+          onSuccess: () => {
+            toast.success('Logged in successfully!')
+            router.push('/')
+          },
+          onError: (error) => {
+            toast.error(error.error.message)
+          },
+        },
       })
     },
   })
+
   return (
     <Card>
       <CardHeader>

@@ -21,8 +21,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { authClient } from '@/lib/auth-client'
 import { registerSchema } from '@/lib/schemas'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 export default function RegisterPage() {
+  const router = useRouter()
   const form = useForm({
     defaultValues: {
       name: '',
@@ -37,9 +40,19 @@ export default function RegisterPage() {
         email: value.email,
         name: value.name,
         password: value.password,
+        fetchOptions: {
+          onSuccess: () => {
+            toast.success('Account created successfully!')
+            router.push('/')
+          },
+          onError: (error) => {
+            toast.error(error.error.message)
+          },
+        },
       })
     },
   })
+
   return (
     <Card>
       <CardHeader>
