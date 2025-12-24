@@ -20,22 +20,20 @@ import {
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { authClient } from '@/lib/auth-client'
-import { registerSchema } from '@/lib/schemas'
+import { loginSchema } from '@/lib/schemas'
 
-export default function RegisterPage() {
+export default function LoginPage() {
   const form = useForm({
     defaultValues: {
-      name: '',
       email: '',
       password: '',
     },
     validators: {
-      onBlur: registerSchema,
+      onBlur: loginSchema,
     },
     onSubmit: async ({ value }) => {
-      await authClient.signUp.email({
+      await authClient.signIn.email({
         email: value.email,
-        name: value.name,
         password: value.password,
       })
     },
@@ -43,8 +41,8 @@ export default function RegisterPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sign up</CardTitle>
-        <CardDescription>Create an account to get started</CardDescription>
+        <CardTitle>Log In</CardTitle>
+        <CardDescription>Login to get started right away</CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -56,30 +54,6 @@ export default function RegisterPage() {
           }}
         >
           <FieldGroup>
-            <form.Field
-              name="name"
-              children={(field) => {
-                const isInvalid =
-                  field.state.meta.isTouched && !field.state.meta.isValid
-                return (
-                  <Field data-invalid={isInvalid}>
-                    <FieldLabel>Full Name</FieldLabel>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      aria-invalid={isInvalid}
-                      placeholder="full name"
-                    />
-                    {isInvalid && (
-                      <FieldError errors={field.state.meta.errors} />
-                    )}
-                  </Field>
-                )
-              }}
-            />
             <form.Field
               name="email"
               children={(field) => {
@@ -136,7 +110,7 @@ export default function RegisterPage() {
       <CardFooter>
         <Field>
           <Button type="submit" form="register-form">
-            Sign Up
+            Login
           </Button>
         </Field>
       </CardFooter>
