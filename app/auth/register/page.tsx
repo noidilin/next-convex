@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { registerSchema } from '@/lib/schemas'
+import { authClient } from '@/lib/auth-client'
 
 export default function Registerpage() {
   const form = useForm({
@@ -31,7 +32,13 @@ export default function Registerpage() {
     validators: {
       onBlur: registerSchema,
     },
-    onSubmit: () => {},
+    onSubmit: async ({ value }) => {
+      await authClient.signUp.email({
+        email: value.email,
+        name: value.name,
+        password: value.password,
+      })
+    },
   })
   return (
     <Card>
@@ -44,6 +51,7 @@ export default function Registerpage() {
           id="register-form"
           onSubmit={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             form.handleSubmit()
           }}
         >
