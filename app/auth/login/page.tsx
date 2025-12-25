@@ -2,7 +2,12 @@
 
 'use client'
 
+import { Loading03Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { useForm } from '@tanstack/react-form'
+import { useRouter } from 'next/navigation'
+import { useTransition } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -21,10 +26,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { authClient } from '@/lib/auth-client'
 import { loginSchema } from '@/lib/schemas'
-import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
+  const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const form = useForm({
     defaultValues: {
@@ -34,19 +38,21 @@ export default function LoginPage() {
     validators: {
       onBlur: loginSchema,
     },
-    onSubmit: async ({ value }) => {
-      await authClient.signIn.email({
-        email: value.email,
-        password: value.password,
-        fetchOptions: {
-          onSuccess: () => {
-            toast.success('Logged in successfully!')
-            router.push('/')
+    onSubmit: ({ value }) => {
+      startTransition(async () => {
+        await authClient.signIn.email({
+          email: value.email,
+          password: value.password,
+          fetchOptions: {
+            onSuccess: () => {
+              toast.success('Logged in successfully!')
+              router.push('/')
+            },
+            onError: (error) => {
+              toast.error(error.error.message)
+            },
           },
-          onError: (error) => {
-            toast.error(error.error.message)
-          },
-        },
+        })
       })
     },
   })
@@ -122,8 +128,15 @@ export default function LoginPage() {
       </CardContent>
       <CardFooter>
         <Field>
-          <Button type="submit" form="register-form">
-            Login
+          <Button type="submit" form="register-form" disabled={isPending}>
+            {isPending ? (
+              <>
+                <HugeiconsIcon icon={Loading03Icon} className="animate-spin" />
+                <span>Loading...</span>
+              </>
+            ) : (
+              <span>Signin</span>
+            )}
           </Button>
         </Field>
       </CardFooter>

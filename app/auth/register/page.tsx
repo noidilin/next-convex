@@ -2,7 +2,12 @@
 
 'use client'
 
+import { Loading03Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { useForm } from '@tanstack/react-form'
+import { useRouter } from 'next/navigation'
+import { useTransition } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -21,10 +26,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { authClient } from '@/lib/auth-client'
 import { registerSchema } from '@/lib/schemas'
-import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
 
 export default function RegisterPage() {
+  const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const form = useForm({
     defaultValues: {
@@ -35,20 +39,22 @@ export default function RegisterPage() {
     validators: {
       onBlur: registerSchema,
     },
-    onSubmit: async ({ value }) => {
-      await authClient.signUp.email({
-        email: value.email,
-        name: value.name,
-        password: value.password,
-        fetchOptions: {
-          onSuccess: () => {
-            toast.success('Account created successfully!')
-            router.push('/')
+    onSubmit: ({ value }) => {
+      startTransition(async () => {
+        await authClient.signUp.email({
+          email: value.email,
+          name: value.name,
+          password: value.password,
+          fetchOptions: {
+            onSuccess: () => {
+              toast.success('Account created successfully!')
+              router.push('/')
+            },
+            onError: (error) => {
+              toast.error(error.error.message)
+            },
           },
-          onError: (error) => {
-            toast.error(error.error.message)
-          },
-        },
+        })
       })
     },
   })
@@ -148,8 +154,15 @@ export default function RegisterPage() {
       </CardContent>
       <CardFooter>
         <Field>
-          <Button type="submit" form="register-form">
-            Sign Up
+          <Button type="submit" form="register-form" disabled={isPending}>
+            {isPending ? (
+              <>
+                <HugeiconsIcon icon={Loading03Icon} className="animate-spin" />
+                <span>Loading...</span>
+              </>
+            ) : (
+              <span>Sign Up</span>
+            )}
           </Button>
         </Field>
       </CardFooter>
