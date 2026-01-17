@@ -3,9 +3,9 @@ import './globals.css'
 import { ConvexClientProvider } from '@/components/base/convex-client-provider'
 import { TailwindIndicator } from '@/components/base/tailwind-indicator'
 import { ThemeProvider } from '@/components/base/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
 import { firaCode, fraunces, merriweatherSans } from '@/lib/fonts'
 import { cn } from '@/lib/utils'
-import { Toaster } from '@/components/ui/sonner'
 
 export const metadata: Metadata = {
   title: 'Next 16',

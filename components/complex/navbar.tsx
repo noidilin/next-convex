@@ -2,11 +2,11 @@
 
 import { useConvexAuth } from 'convex/react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { ThemeToggle } from '@/components/base/theme-toggle'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { authClient } from '@/lib/auth-client'
-import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
 
 export default function Navbar() {
   const { isAuthenticated, isLoading } = useConvexAuth()
