@@ -1,14 +1,14 @@
-'use client'
-
-import { useQuery } from 'convex/react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { api } from '@/convex/_generated/api'
-import { buttonVariants } from '@/components/ui/button'
+import { fetchAuthQuery } from '@/lib/auth-server'
 
-export default function BlogPage() {
-  const data = useQuery(api.posts.getPosts)
+export default async function BlogPage() {
+  // NOTE: if we fetch at the server side, we lost the ability to subscribe to convex database like useQuery does
+  // const data = useQuery(api.posts.getPosts)
+  const data = await fetchAuthQuery(api.posts.getPosts)
 
   return (
     <div className="py-12">
