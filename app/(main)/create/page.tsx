@@ -35,6 +35,7 @@ export default function CreatePage() {
     defaultValues: {
       title: '',
       content: '',
+      image: null as File | null,
     },
     onSubmit: ({ value }) => {
       startTransition(async () => {
@@ -114,6 +115,34 @@ export default function CreatePage() {
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
                         placeholder="Write your blog content here."
+                      />
+                      {isInvalid && (
+                        <FieldError errors={field.state.meta.errors} />
+                      )}
+                    </Field>
+                  )
+                }}
+              />
+              <form.Field
+                name="image"
+                children={(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel>Image</FieldLabel>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        id={field.name}
+                        name={field.name}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] ?? null
+                          field.handleChange(file)
+                        }}
+                        aria-invalid={isInvalid}
+                        placeholder="Upload you image"
                       />
                       {isInvalid && (
                         <FieldError errors={field.state.meta.errors} />
