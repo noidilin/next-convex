@@ -5,9 +5,8 @@
 import { Loading03Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useForm } from '@tanstack/react-form'
-import { useMutation } from 'convex/react'
 import { useTransition } from 'react'
-import { toast } from 'sonner'
+import { createBlogAction } from '@/app/action'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -24,14 +23,10 @@ import {
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { api } from '@/convex/_generated/api'
 import { postSchema } from '@/lib/schemas'
-import { useRouter } from 'next/navigation'
 
 export default function CreatePage() {
   const [isPending, startTransition] = useTransition()
-  const mutation = useMutation(api.posts.createPost)
-  const router = useRouter()
 
   const form = useForm({
     validators: {
@@ -43,13 +38,15 @@ export default function CreatePage() {
     },
     onSubmit: ({ value }) => {
       startTransition(async () => {
-        await mutation({
-          body: value.content,
-          title: value.title,
-        })
+        await createBlogAction(value)
+        // client-side mutation with convex
+        // await mutation({
+        //   body: value.content,
+        //   title: value.title,
+        // })
+        // toast.success('Everything was fine.')
+        // router.push('/')
       })
-      toast.success('Everything was fine.')
-      router.push('/')
     },
   })
   return (
