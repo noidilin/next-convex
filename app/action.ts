@@ -5,6 +5,7 @@ import type z from 'zod'
 import { api } from '@/convex/_generated/api'
 import { fetchAuthMutation } from '@/lib/auth-server'
 import { postSchema } from '@/lib/schemas'
+import { revalidatePath } from 'next/cache'
 
 export async function createBlogAction(value: z.infer<typeof postSchema>) {
   try {
@@ -43,5 +44,6 @@ export async function createBlogAction(value: z.infer<typeof postSchema>) {
     return { error: 'Failed to create post' }
   }
 
+  revalidatePath('/blog')
   return redirect('/')
 }

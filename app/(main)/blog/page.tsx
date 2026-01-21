@@ -7,6 +7,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/convex/_generated/api'
 import { fetchAuthQuery } from '@/lib/auth-server'
 
+export const dynamic = 'force-static'
+export const revalidate = 30
+
 export default function BlogPage() {
   return (
     <div className="py-12">
