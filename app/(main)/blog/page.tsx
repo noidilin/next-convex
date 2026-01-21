@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/convex/_generated/api'
 import { fetchAuthQuery } from '@/lib/auth-server'
-import { Skeleton } from '@/components/ui/skeleton'
 
 export default function BlogPage() {
   return (
@@ -26,19 +26,23 @@ export default function BlogPage() {
 }
 
 async function LoadingBlogList() {
-  await new Promise((resolve) => setTimeout(resolve, 5000))
+  await new Promise((resolve) => setTimeout(resolve, 1000))
   // NOTE: if we fetch at the server side, we lost the ability to subscribe to convex database like useQuery does
   // const data = useQuery(api.posts.getPosts)
   const data = await fetchAuthQuery(api.posts.getPosts)
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {data?.map((post) => (
         <Card key={post._id} className="pt-0">
           <CardHeader className="relative h-48 w-full overflow-hidden">
             <Image
-              src="https://images.unsplash.com/photo-1761019646782-4bc46ba43fe9?q=80&w=1631&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+              src={
+                post.imageUrl ??
+                'https://images.unsplash.com/photo-1761019646782-4bc46ba43fe9?q=80&w=1631&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+              }
               alt="image"
-              className="rounded-t-lg"
+              className="rounded-t-lg object-cover"
               fill
             />
           </CardHeader>
