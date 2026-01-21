@@ -2,6 +2,7 @@ import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import Image from 'next/image'
 import Link from 'next/link'
+import CommentSection from '@/components/complex/comment-section'
 import { buttonVariants } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { api } from '@/convex/_generated/api'
@@ -58,6 +59,7 @@ export default async function PostIdRoute({ params }: PostIdRouteProps) {
         {post.body}
       </p>
       <Separator className="my-8" />
+      <CommentSection />
     </div>
   )
 }
