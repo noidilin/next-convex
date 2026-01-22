@@ -5,7 +5,7 @@
 import { Loading03Icon, Message01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useForm } from '@tanstack/react-form'
-import { useMutation, useQuery } from 'convex/react'
+import { type Preloaded, useMutation, usePreloadedQuery } from 'convex/react'
 import { useParams } from 'next/navigation'
 import { useTransition } from 'react'
 import { toast } from 'sonner'
@@ -19,12 +19,16 @@ import { Field, FieldGroup, FieldLabel } from '../ui/field'
 import { Separator } from '../ui/separator'
 import { Textarea } from '../ui/textarea'
 
-export default function CommentSection() {
+export default function CommentSection(props: {
+  preloadedComments: Preloaded<typeof api.comments.getCommentsByPostId>
+}) {
   const [isPending, startTransition] = useTransition()
   const params = useParams<{ postId: Id<'posts'> }>()
-  const data = useQuery(api.comments.getCommentsByPostId, {
-    postId: params.postId,
-  })
+  // NOTE: ssr rendering from parent component but still subscribe to convex db
+  const data = usePreloadedQuery(props.preloadedComments)
+  // const data = useQuery(api.comments.getCommentsByPostId, {
+  //   postId: params.postId,
+  // })
   const mutation = useMutation(api.comments.createComment)
 
   const form = useForm({

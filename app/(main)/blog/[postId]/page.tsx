@@ -7,7 +7,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { api } from '@/convex/_generated/api'
 import type { Id } from '@/convex/_generated/dataModel'
-import { fetchAuthQuery } from '@/lib/auth-server'
+import { fetchAuthQuery, preloadAuthQuery } from '@/lib/auth-server'
 
 interface PostIdRouteProps {
   params: Promise<{
@@ -18,7 +18,15 @@ interface PostIdRouteProps {
 
 export default async function PostIdRoute({ params }: PostIdRouteProps) {
   const { postId } = await params
-  const post = await fetchAuthQuery(api.posts.getPostById, { postId: postId })
+
+  // NOTE: remember to fetch data in parallel
+  const [post, comments] = await Promise.all([
+    await fetchAuthQuery(api.posts.getPostById, { postId: postId }),
+    await preloadAuthQuery(api.comments.getCommentsByPostId, {
+      postId: postId,
+    }),
+  ])
+
   if (!post)
     return (
       <h1 className="py-20 font-extrabold text-6xl text-muted-foreground">
@@ -59,7 +67,7 @@ export default async function PostIdRoute({ params }: PostIdRouteProps) {
         {post.body}
       </p>
       <Separator className="my-8" />
-      <CommentSection />
+      <CommentSection preloadedComments={comments} />
     </div>
   )
 }
