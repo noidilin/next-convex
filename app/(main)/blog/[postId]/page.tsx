@@ -3,6 +3,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import CommentSection from '@/components/complex/comment-section'
+import PostPresence from '@/components/complex/post-presence'
 import { buttonVariants } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { api } from '@/convex/_generated/api'
@@ -20,11 +21,12 @@ export default async function PostIdRoute({ params }: PostIdRouteProps) {
   const { postId } = await params
 
   // NOTE: remember to fetch data in parallel
-  const [post, comments] = await Promise.all([
+  const [post, comments, userId] = await Promise.all([
     await fetchAuthQuery(api.posts.getPostById, { postId: postId }),
     await preloadAuthQuery(api.comments.getCommentsByPostId, {
       postId: postId,
     }),
+    await fetchAuthQuery(api.presence.getUserId),
   ])
 
   if (!post)
@@ -58,9 +60,12 @@ export default async function PostIdRoute({ params }: PostIdRouteProps) {
         <h1 className="font-bold text-4xl text-foreground tracking-tight">
           {post.title}
         </h1>
-        <p className="text-shadow-muted-foreground text-sm">
-          Posted on: {new Date(post._creationTime).toLocaleDateString()}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-shadow-muted-foreground text-sm">
+            Posted on: {new Date(post._creationTime).toLocaleDateString()}
+          </p>
+          {userId && <PostPresence roomId={post._id} userId={userId} />}
+        </div>
       </div>
       <Separator className="my-8" />
       <p className="whitespace-pre-wrap text-foreground/90 text-lg leading-relaxed">
