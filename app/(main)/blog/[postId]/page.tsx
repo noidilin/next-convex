@@ -2,6 +2,7 @@ import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import CommentSection from '@/components/complex/comment-section'
 import PostPresence from '@/components/complex/post-presence'
 import { buttonVariants } from '@/components/ui/button'
@@ -28,6 +29,11 @@ export default async function PostIdRoute({ params }: PostIdRouteProps) {
     }),
     await fetchAuthQuery(api.presence.getUserId),
   ])
+
+  // PERF: Multi-layer auth check on server sides as well
+  if (!userId) {
+    return redirect('/auth/login')
+  }
 
   if (!post)
     return (
