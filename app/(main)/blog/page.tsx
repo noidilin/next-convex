@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Suspense } from 'react'
@@ -7,8 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/convex/_generated/api'
 import { fetchAuthQuery } from '@/lib/auth-server'
 
-export const dynamic = 'force-static'
-export const revalidate = 30
+// NOTE: needs to be disabled, when cache component is enabled
+// export const dynamic = 'force-static'
+// export const revalidate = 30
 
 export default function BlogPage() {
   return (
@@ -29,9 +31,12 @@ export default function BlogPage() {
 }
 
 async function LoadingBlogList() {
-  await new Promise((resolve) => setTimeout(resolve, 1000))
   // NOTE: if we fetch at the server side, we lost the ability to subscribe to convex database like useQuery does
   // const data = useQuery(api.posts.getPosts)
+  'use cache: private'
+  cacheLife('hours')
+  cacheTag('blog')
+
   const data = await fetchAuthQuery(api.posts.getPosts)
 
   return (
