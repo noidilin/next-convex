@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { ThemeToggle } from '@/components/base/theme-toggle'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { authClient } from '@/lib/auth-client'
+import SearchInput from './search-input'
 
 export default function Navbar() {
   const { isAuthenticated, isLoading } = useConvexAuth()
@@ -36,6 +37,9 @@ export default function Navbar() {
         </div>
       </div>
       <div className="flex items-center gap-2">
+        <div className="mr-2 hidden md:block">
+          <SearchInput />
+        </div>
         {isLoading ? null : isAuthenticated ? (
           <Button
             onClick={() =>
