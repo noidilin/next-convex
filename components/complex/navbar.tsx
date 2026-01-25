@@ -20,7 +20,7 @@ export default function Navbar() {
           <h1 className="font-bold text-3xl">
             Next
             <span className="bg-foreground px-0.5 text-accent dark:bg-accent dark:text-accent-foreground">
-              Pro
+              Convex
             </span>
           </h1>
         </Link>
