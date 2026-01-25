@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { cacheLife, cacheTag } from 'next/cache'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -12,15 +13,35 @@ import { fetchAuthQuery } from '@/lib/auth-server'
 // export const dynamic = 'force-static'
 // export const revalidate = 30
 
+export const metadata: Metadata = {
+  title: 'Blog | Next 16 on board project',
+  description:
+    'Blog listing with PPR streaming using Suspense boundaries, private cache directive (use cache: private), cacheLife("hours") for time-based revalidation, and cacheTag("blog") for on-demand invalidation via Convex fetchAuthQuery',
+  category: 'PPR Streaming + Cache Components',
+  keywords: [
+    'Next.js 16',
+    'PPR',
+    'partial prerendering',
+    'Suspense',
+    'use cache',
+    'cacheLife',
+    'cacheTag',
+    'Convex',
+    'fetchAuthQuery',
+  ],
+  authors: [{ name: 'noidilin' }],
+}
+
 export default function BlogPage() {
   return (
     <div className="py-12">
       <div className="pb-12 text-center">
         <h1 className="font-extrabold text-4xl tracking-tight sm:text-5xl">
-          Our Blog
+          All Blog Post
         </h1>
         <p className="mx-auto max-w-2xl pt-4 text-muted-foreground text-xl">
-          Insights, thoughts, and trends from our team.
+          The list of posts are partial pre-rendering with Next.js 16 cache
+          components
         </p>
       </div>
       <Suspense fallback={<SkeletonLoadingUI />}>

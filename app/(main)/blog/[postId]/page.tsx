@@ -1,5 +1,6 @@
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -16,6 +17,33 @@ interface PostIdRouteProps {
     // to satisfy the v.id('posts') args in posts.ts
     postId: Id<'posts'>
   }>
+}
+
+export async function generateMetadata({
+  params,
+}: PostIdRouteProps): Promise<Metadata> {
+  const { postId } = await params
+  const post = await fetchAuthQuery(api.posts.getPostById, { postId: postId })
+
+  if (!post) return { title: 'Post Not Found' }
+  return {
+    title: `${post.title} | Next 16 on board project`,
+    description: `Dynamic post page using async params, parallel data fetching with Promise.all (fetchAuthQuery + preloadAuthQuery), server-side auth check, and real-time presence via Convex`,
+    category: 'Dynamic Route + Parallel Data Fetching',
+    keywords: [
+      'Next.js 16',
+      'dynamic route',
+      'async params',
+      'Promise.all',
+      'parallel fetching',
+      'fetchAuthQuery',
+      'preloadAuthQuery',
+      'Convex',
+      'real-time presence',
+      'server-side auth',
+    ],
+    authors: [{ name: 'noidilin' }],
+  }
 }
 
 export default async function PostIdRoute({ params }: PostIdRouteProps) {
