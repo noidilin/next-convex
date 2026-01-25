@@ -1,4 +1,5 @@
 import { ConvexError, v } from 'convex/values'
+import type { Doc } from './_generated/dataModel'
 import { mutation, query } from './_generated/server'
 import { authComponent } from './auth'
 
@@ -60,5 +61,58 @@ export const getPostById = query({
         ? await ctx.storage.getUrl(post.imageStorageId)
         : null
     return { ...post, imageUrl: resolvedImageUrl }
+  },
+})
+
+interface ISearchResults {
+  _id: string
+  title: string
+  body: string
+}
+
+export const searchPosts = query({
+  args: {
+    term: v.string(),
+    limit: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit
+    const results: Array<ISearchResults> = []
+    const seen = new Set()
+
+    // NOTE: since we will get result from search 'title' and search 'body'
+    // we have to eliminate the duplicated results with set
+    const pushDocs = async (docs: Array<Doc<'posts'>>) => {
+      for (const doc of docs) {
+        if (seen.has(doc._id)) continue
+
+        seen.add(doc._id)
+        results.push({
+          _id: doc._id,
+          title: doc.title,
+          body: doc.body,
+        })
+
+        if (results.length >= limit) break
+      }
+    }
+
+    // NOTE: the search results from title is prioritized
+    const titleMatches = await ctx.db
+      .query('posts')
+      .withSearchIndex('search_title', (q) => q.search('title', args.term))
+      .take(limit)
+    await pushDocs(titleMatches)
+
+    // NOTE: won't even try to search body if results from title exceed the limit
+    if (results.length < limit) {
+      const bodyMatches = await ctx.db
+        .query('posts')
+        .withSearchIndex('search_body', (q) => q.search('body', args.term))
+        .take(limit)
+      await pushDocs(bodyMatches)
+    }
+
+    return results
   },
 })
