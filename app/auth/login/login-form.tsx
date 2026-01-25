@@ -46,6 +46,7 @@ export default function LoginForm() {
           fetchOptions: {
             onSuccess: () => {
               toast.success('Logged in successfully!')
+              router.refresh()
               router.push('/')
             },
             onError: (error) => {

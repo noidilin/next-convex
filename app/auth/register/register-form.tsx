@@ -48,6 +48,7 @@ export default function RegisterForm() {
           fetchOptions: {
             onSuccess: () => {
               toast.success('Account created successfully!')
+              router.refresh()
               router.push('/')
             },
             onError: (error) => {
