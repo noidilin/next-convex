@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         port: '',
       },
+      {
+        hostname: 'adept-raccoon-714.convex.cloud',
+        protocol: 'https',
+        port: '',
+      },
     ],
   },
 }
