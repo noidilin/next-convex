@@ -17,6 +17,27 @@ export const metadata: Metadata = {
   authors: [{ name: 'noidilin' }],
 }
 
+// PERF: The render and data flow in route `/`
+// 1. Page component runs on the server: it calls `getCurrentUser()` → returns `userPromise`
+//    - since `getCurrentUser` is wrapped in React `cache()`
+//    - any other call to `getCurrentUser()` during this same request returns the same promise/result
+// 2. Page component renders
+//    - not `await` here, so the whote route from streaming won't be block
+//    - fallback component in `<Suspense>` got render first
+// 3. HomeHero component renders
+//    - it is component that actually accepts promise with the `await` keyboard
+//    - Next replace the fallback component with this component when promise resolves
+// 4. The child component in HomeHero
+//    - `<WelcomeTitle user={user} />` (server component)
+//    - `<OnboardTag user={user} />` (client component - need interactivity)
+// 5. When props is passed to a Client Component
+//    - Next must serialize the props over the RSC boundary
+//    - only JSON-serializable data can be passed (strings, numbers, booleans, null, plain objects/arrays)
+// 6. OnboardTag runs in the browser
+//    - It receives user as a plain prop, and passes it down to BadgeTexture
+//    - BadgeTexture then decides what to display based on user's presence
+
+// NOTE: The cache() in React is a request-scoped memoization, which prevents duplicate calls within the same request
 const getCurrentUser = cache(() => fetchAuthQuery(api.auth.getCurrentUser))
 
 type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>
@@ -44,11 +65,7 @@ async function HomeHero({
     <div className="relative mt-16 mb-64 grid items-center gap-10 overflow-hidden rounded-2xl border bg-card/60 lg:mt-20 lg:grid-cols-[1.15fr_0.85fr]">
       <WelcomeTitle user={user} />
       <div className="h-[55vh] sm:h-[60vh] lg:h-[70vh]">
-        <OnboardTag
-          user={
-            user ? { name: user.name ?? null, email: user.email ?? null } : null
-          }
-        />
+        <OnboardTag user={user} />
       </div>
     </div>
   )
