@@ -59,7 +59,9 @@ useTexture.preload(
 // NOTE: structure of OnboardTag
 // - <Canvas>: entry point into declarative Three.js
 // - <Physics>: tie <Band/> to physics in Rapier
-export default function OnboardTag() {
+type OnboardTagUser = { name?: string | null; email?: string | null } | null
+
+export default function OnboardTag({ user }: { user?: OnboardTagUser }) {
   const { debug } = useControls({ debug: false })
   return (
     <Canvas camera={{ position: [0, 0, 13], fov: 25 }}>
@@ -70,7 +72,7 @@ export default function OnboardTag() {
         gravity={[0, -40, 0]}
         timeStep={1 / 60}
       >
-        <Band />
+        <Band user={user ?? null} />
       </Physics>
       <Environment background blur={0.75}>
         <color attach="background" args={['black']} />
@@ -107,7 +109,15 @@ export default function OnboardTag() {
   )
 }
 
-function Band({ maxSpeed = 50, minSpeed = 10 }) {
+function Band({
+  maxSpeed = 50,
+  minSpeed = 10,
+  user,
+}: {
+  maxSpeed?: number
+  minSpeed?: number
+  user: OnboardTagUser
+}) {
   const { nodes, materials } = useGLTF(
     'https://assets.vercel.com/image/upload/contentful/image/e5382hct74si/5huRVDzcoDwnbgrKUo1Lzs/53b6dd7d6b4ffcdbd338fa60265949e1/tag.glb',
   ) as unknown as GLTFResult
@@ -339,8 +349,8 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
           >
             <mesh geometry={nodes.card.geometry}>
               <meshPhysicalMaterial
-                map={materials.base.map}
-                map-anisotropy={16}
+                // map={materials.base.map}
+                // map-anisotropy={16}
                 clearcoat={1}
                 clearcoatRoughness={0.15}
                 iridescence={1}
@@ -349,8 +359,8 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
                 metalness={0.5}
                 roughness={0.3}
               >
-                <RenderTexture attach="map" height={2000} width={2000}>
-                  <BadgeTexture user={{ firstName: 'test', lastName: 'lin' }} />
+                <RenderTexture attach="map" width={2000} height={2000}>
+                  <BadgeTexture user={user} />
                 </RenderTexture>
               </meshPhysicalMaterial>
             </mesh>
@@ -383,33 +393,33 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
   )
 }
 
-function BadgeTexture({
-  user,
-}: {
-  user: { firstName: string; lastName: string }
-}) {
+function BadgeTexture({ user }: { user: OnboardTagUser }) {
+  const nameLine = user?.name?.trim() || 'Anonymous'
+  const emailLine = user?.email?.trim() || ''
+
   return (
     <Center bottom right>
-      <group scale={0.45}>
-        <Resize height>
+      <group scale={2}>
+        <Resize height width>
           <Text3D
             bevelEnabled={false}
             bevelSize={0}
             font="/Geist_Regular.json"
-            height={0}
-            rotation={[0, Math.PI, Math.PI]}
+            height={0.5}
+            position={[5.5, 0, 0]}
+            rotation={[0, Math.PI, Math.PI / 2]}
           >
-            {user.firstName}
+            {user ? nameLine : 'Log in'}
           </Text3D>
           <Text3D
             bevelEnabled={false}
             bevelSize={0}
             font="/Geist_Regular.json"
-            height={0}
-            position={[0, 1.4, 0]}
-            rotation={[0, Math.PI, Math.PI]}
+            height={0.5}
+            position={[4, 0, 0]}
+            rotation={[0, Math.PI, Math.PI / 2]}
           >
-            {user.lastName}
+            {user ? emailLine : 'to claim your tag'}
           </Text3D>
         </Resize>
       </group>

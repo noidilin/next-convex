@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Suspense } from 'react'
+import { cache, Suspense } from 'react'
 import OnboardTag from '@/components/three/onboard-tag'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
@@ -17,23 +17,44 @@ export const metadata: Metadata = {
   authors: [{ name: 'noidilin' }],
 }
 
+const getCurrentUser = cache(() => fetchAuthQuery(api.auth.getCurrentUser))
+
+type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>
+
 export default function Page() {
+  const userPromise = getCurrentUser()
+
   return (
     <div className="min-h-screen overflow-hidden">
-      <div className="relative mt-16 mb-64 grid items-center gap-10 overflow-hidden rounded-2xl border bg-card/60 lg:mt-20 lg:grid-cols-[1.15fr_0.85fr]">
-        <Suspense fallback={<WelcomeTitleSkeleton />}>
-          <WelcomeTitle />
-        </Suspense>
-        <div className="h-[55vh] sm:h-[60vh] lg:h-[70vh]">
-          <OnboardTag />
-        </div>
+      <Suspense fallback={<HomeHeroSkeleton />}>
+        <HomeHero userPromise={userPromise} />
+      </Suspense>
+    </div>
+  )
+}
+
+async function HomeHero({
+  userPromise,
+}: {
+  userPromise: ReturnType<typeof getCurrentUser>
+}) {
+  const user = await userPromise
+
+  return (
+    <div className="relative mt-16 mb-64 grid items-center gap-10 overflow-hidden rounded-2xl border bg-card/60 lg:mt-20 lg:grid-cols-[1.15fr_0.85fr]">
+      <WelcomeTitle user={user} />
+      <div className="h-[55vh] sm:h-[60vh] lg:h-[70vh]">
+        <OnboardTag
+          user={
+            user ? { name: user.name ?? null, email: user.email ?? null } : null
+          }
+        />
       </div>
     </div>
   )
 }
 
-async function WelcomeTitle() {
-  const user = await fetchAuthQuery(api.auth.getCurrentUser)
+function WelcomeTitle({ user }: { user: CurrentUser }) {
   const displayName = user?.name ?? user?.email ?? 'there'
 
   return (
@@ -111,44 +132,51 @@ async function WelcomeTitle() {
   )
 }
 
-function WelcomeTitleSkeleton() {
+function HomeHeroSkeleton() {
   return (
-    <section className="relative overflow-hidden p-8 shadow-sm backdrop-blur-sm sm:p-10">
-      <div className="relative">
-        <div className="flex flex-wrap items-center gap-2">
-          <Skeleton className="h-6 w-20 rounded-full" />
-          <Skeleton className="h-6 w-20 rounded-full" />
-          <Skeleton className="h-6 w-24 rounded-full" />
-        </div>
-
-        <div className="mt-5 space-y-3">
-          <Skeleton className="h-10 w-4/5 sm:h-12" />
-          <Skeleton className="h-10 w-2/3 sm:h-12" />
-        </div>
-
-        <div className="mt-5 space-y-2">
-          <Skeleton className="h-5 w-full max-w-prose" />
-          <Skeleton className="h-5 w-5/6 max-w-prose" />
-        </div>
-
-        <div className="mt-7 flex flex-wrap gap-3">
-          <Skeleton className="h-10 w-32" />
-          <Skeleton className="h-10 w-36" />
-        </div>
-
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border bg-background/60 p-4">
-            <Skeleton className="h-5 w-28" />
-            <Skeleton className="mt-3 h-4 w-full" />
-            <Skeleton className="mt-2 h-4 w-5/6" />
+    <div className="relative mt-16 mb-64 grid items-center gap-10 overflow-hidden rounded-2xl border bg-card/60 lg:mt-20 lg:grid-cols-[1.15fr_0.85fr]">
+      <section className="relative overflow-hidden p-8 shadow-sm backdrop-blur-sm sm:p-10">
+        <div className="relative">
+          <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-6 w-24 rounded-full" />
           </div>
-          <div className="rounded-2xl border bg-background/60 p-4">
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="mt-3 h-4 w-full" />
-            <Skeleton className="mt-2 h-4 w-4/5" />
+
+          <div className="mt-5 space-y-3">
+            <Skeleton className="h-10 w-4/5 sm:h-12" />
+            <Skeleton className="h-10 w-2/3 sm:h-12" />
           </div>
+
+          <div className="mt-5 space-y-2">
+            <Skeleton className="h-5 w-full max-w-prose" />
+            <Skeleton className="h-5 w-5/6 max-w-prose" />
+          </div>
+
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-10 w-36" />
+          </div>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl border bg-background/60 p-4">
+              <Skeleton className="h-5 w-28" />
+              <Skeleton className="mt-3 h-4 w-full" />
+              <Skeleton className="mt-2 h-4 w-5/6" />
+            </div>
+            <div className="rounded-2xl border bg-background/60 p-4">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="mt-3 h-4 w-full" />
+              <Skeleton className="mt-2 h-4 w-4/5" />
+            </div>
+          </div>
+        </div>
+      </section>
+      <div className="h-[55vh] sm:h-[60vh] lg:h-[70vh]">
+        <div className="flex h-full w-full items-center justify-center">
+          <Skeleton className="h-[75%] w-[75%] rounded-2xl" />
         </div>
       </div>
-    </section>
+    </div>
   )
 }
