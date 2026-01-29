@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { ConvexClientProvider } from '@/components/base/convex-client-provider'
+import { LevaRoot } from '@/components/base/leva-root'
 import { TailwindIndicator } from '@/components/base/tailwind-indicator'
 import { ThemeProvider } from '@/components/base/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
@@ -39,6 +40,7 @@ export default function RootLayout({
               <TailwindIndicator />
             </main>
           </ConvexClientProvider>
+          <LevaRoot />
           <Toaster closeButton />
         </ThemeProvider>
       </body>
