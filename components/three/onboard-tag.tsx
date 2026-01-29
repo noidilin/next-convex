@@ -132,8 +132,13 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
 
   const vec = new THREE.Vector3(),
     ang = new THREE.Vector3(),
-    rot = new THREE.Vector3(),
     dir = new THREE.Vector3()
+
+  const q = new THREE.Quaternion()
+  const euler = new THREE.Euler(0, 0, 0, 'YXZ')
+  const restYaw = useRef<number | null>(null)
+
+  const normAngle = (a: number) => Math.atan2(Math.sin(a), Math.cos(a))
 
   const segmentProps = {
     canSleep: true,
@@ -259,12 +264,20 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
       // NOTE: Tilt it back towards the screen
       const shouldAutoface = Boolean(dragged) || card.current.isMoving()
       if (shouldAutoface) {
-        ang.copy(card.current.angvel()) // card.current.angvel() current rotational velocity
-        rot.copy(card.current.rotation()) // card.current.rotation() rotation
-        if (Math.abs(rot.y) > 1e-3) {
-          // Nudge towards the front without waking the whole chain.
+        const r = card.current.rotation()
+        q.set(r.x, r.y, r.z, r.w)
+        euler.setFromQuaternion(q)
+
+        const yaw = euler.y
+        if (restYaw.current === null) restYaw.current = yaw
+
+        const yawError =
+          restYaw.current === null ? 0 : normAngle(restYaw.current - yaw)
+        if (Math.abs(yawError) > 1e-3) {
+          ang.copy(card.current.angvel()) // card.current.angvel() current rotational velocity
+          // Nudge back towards the initial orientation without waking the whole chain.
           card.current.setAngvel(
-            { x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z },
+            { x: ang.x, y: ang.y + yawError * 0.25, z: ang.z },
             false,
           )
         }
@@ -293,6 +306,7 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
         <RigidBody
           ref={card}
           position={[2, 0, 0]}
+          rotation={[0, Math.PI, 0]}
           {...segmentProps}
           type={dragged ? 'kinematicPosition' : 'dynamic'}
         >
