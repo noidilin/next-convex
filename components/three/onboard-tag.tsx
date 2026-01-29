@@ -400,21 +400,21 @@ function BadgeTexture({ user }: { user: OnboardTagUser }) {
   const { badgeScale, padX, padY, lineGap } = useControls('Onboard tag badge', {
     badgeScale: { value: 0.5, min: 0.25, max: 2, step: 0.01 },
     padX: { value: 0, min: -10, max: 10, step: 0.1 },
-    padY: { value: 11.7, min: 0, max: 50, step: 0.1 },
+    padY: { value: 0, min: -20, max: 20, step: 0.1 },
     lineGap: { value: 1.5, min: 0, max: 2, step: 0.01 },
   })
 
   return (
     <Center
-      bottom
       right
+      disableY
       cacheKey={cacheKey}
       scale={badgeScale}
       position={[padX, padY, 0]}
     >
       <group>
         <group rotation={[0, Math.PI, Math.PI / 2]}>
-          <Center right>
+          <Center right disableY>
             <Text3D
               bevelEnabled={false}
               font="Syne_ExtraBold_Regular.json"
@@ -425,7 +425,7 @@ function BadgeTexture({ user }: { user: OnboardTagUser }) {
           </Center>
 
           <group position={[0, -lineGap, 0]}>
-            <Center right>
+            <Center right disableY>
               <Text3D
                 bevelEnabled={false}
                 font="Syne_ExtraBold_Regular.json"
