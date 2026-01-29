@@ -457,7 +457,7 @@ function BadgeTexture({ user }: { user: OnboardTagUser }) {
   const { badgeScale, padX, padY, lineGap } = useControls('Onboard tag badge', {
     badgeScale: { value: 0.5, min: 0.25, max: 2, step: 0.01 },
     padX: { value: 0, min: -10, max: 10, step: 0.1 },
-    padY: { value: 0, min: -20, max: 20, step: 0.1 },
+    padY: { value: -2.8, min: -20, max: 20, step: 0.1 },
     lineGap: { value: 1.5, min: 0, max: 2, step: 0.01 },
   })
 
