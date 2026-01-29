@@ -28,7 +28,8 @@ import {
 } from '@react-three/rapier'
 import { useControls } from 'leva'
 import { MeshLineGeometry, MeshLineMaterial } from 'meshline'
-import { type RefObject, useEffect, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { GLTF } from 'three-stdlib'
 
@@ -62,8 +63,41 @@ type OnboardTagUser = { name?: string | null; email?: string | null } | null
 
 export default function OnboardTag({ user }: { user?: OnboardTagUser }) {
   const { debug } = useControls({ debug: false })
+
+  // HACK: fix route/ BFC cache issue (the old canvas instance is retored by React in a bad state)
+  // bump canvas key (remount it) when revisit the `/` route
+  // we need to guarantee a fresh convas/ dynamic world on every revisit
+  const pathname = usePathname()
+  const [canvasKey, setCanvasKey] = useState(0)
+  const bumpCanvasKey = useCallback(() => {
+    setCanvasKey((k) => k + 1)
+  }, [])
+
+  // PERF: Avoid an unnecessary remount on first paint.
+  const didMount = useRef(false)
+  useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true
+      return
+    }
+    if (pathname === '/') bumpCanvasKey()
+  }, [pathname, bumpCanvasKey])
+
+  // PERF: Browser back/forward cache (BFCache) restores a frozen snapshot; remount to
+  // guarantee WebGL + physics resume correctly.
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) bumpCanvasKey()
+    }
+    window.addEventListener('pageshow', onPageShow)
+    return () => {
+      window.removeEventListener('pageshow', onPageShow)
+    }
+  }, [bumpCanvasKey])
+
   return (
-    <Canvas camera={{ position: [0, 0, 13], fov: 25 }}>
+    <Canvas key={canvasKey} camera={{ position: [0, 0, 13], fov: 25 }}>
+      <WebGLContextLossRemount onRemount={bumpCanvasKey} />
       <ambientLight intensity={Math.PI} />
       <Physics
         debug={debug}
@@ -106,6 +140,29 @@ export default function OnboardTag({ user }: { user?: OnboardTagUser }) {
       </Environment>
     </Canvas>
   )
+}
+
+function WebGLContextLossRemount({ onRemount }: { onRemount: () => void }) {
+  // NOTE: grab active WebGL renderer from React Three Fiber
+  const gl = useThree((state) => state.gl)
+
+  useEffect(() => {
+    // NOTE: attach DOM event listener to the actual <canvas> element
+    const canvas = gl.domElement
+    const onLost = (e: Event) => {
+      // Prevent the browser's default behavior of permanently disabling the canvas.
+      e.preventDefault()
+      // handle the context lost scenario in callback, in this case will be bumpCanvasKey()
+      onRemount()
+    }
+
+    canvas.addEventListener('webglcontextlost', onLost, { passive: false })
+    return () => {
+      canvas.removeEventListener('webglcontextlost', onLost)
+    }
+  }, [gl, onRemount])
+
+  return null
 }
 
 function Band({
