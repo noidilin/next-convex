@@ -10,19 +10,26 @@ import {
   useGLTF,
   useTexture,
 } from '@react-three/drei'
-import { Canvas, extend, useFrame, useThree } from '@react-three/fiber'
+import {
+  Canvas,
+  extend,
+  type ThreeEvent,
+  useFrame,
+  useThree,
+} from '@react-three/fiber'
 import {
   BallCollider,
   CuboidCollider,
   Physics,
   type RapierRigidBody,
   RigidBody,
+  type RigidBodyProps,
   useRopeJoint,
   useSphericalJoint,
 } from '@react-three/rapier'
 import { useControls } from 'leva'
 import { MeshLineGeometry, MeshLineMaterial } from 'meshline'
-import { useEffect, useRef, useState } from 'react'
+import { type RefObject, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import type { GLTF } from 'three-stdlib'
 
@@ -110,12 +117,18 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
   )
 
   // NOTE: reference for band and the joints
-  const band = useRef<THREE.Mesh | null>(null),
-    fixed = useRef<RapierRigidBody | null>(null),
-    j1 = useRef<RapierRigidBody | null>(null),
-    j2 = useRef<RapierRigidBody | null>(null),
-    j3 = useRef<RapierRigidBody | null>(null),
-    card = useRef<RapierRigidBody | null>(null)
+  const band = useRef<THREE.Mesh<MeshLineGeometry, MeshLineMaterial> | null>(
+    null,
+  )
+  const fixed = useRef<RapierRigidBody | null>(null)
+  const j1 = useRef<RapierRigidBody | null>(null)
+  const j2 = useRef<RapierRigidBody | null>(null)
+  const j3 = useRef<RapierRigidBody | null>(null)
+  const card = useRef<RapierRigidBody | null>(null)
+
+  // Smooth positions (avoid monkey-patching onto RapierRigidBody)
+  const j1Lerped = useRef<THREE.Vector3 | null>(null)
+  const j2Lerped = useRef<THREE.Vector3 | null>(null)
 
   const vec = new THREE.Vector3(),
     ang = new THREE.Vector3(),
@@ -123,12 +136,11 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
     dir = new THREE.Vector3()
 
   const segmentProps = {
-    type: 'dynamic',
     canSleep: true,
     colliders: false,
     angularDamping: 2,
     linearDamping: 2,
-  }
+  } as const satisfies Partial<RigidBodyProps>
 
   // NOTE: Canvas size
   const { width, height } = useThree((state) => state.size)
@@ -149,20 +161,56 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
 
   // NOTE: Defining physics joints, and made a chain that hangs on a fixed point
   // useRopeJoint requires two <RigidBody> references
-  useRopeJoint(fixed, j1, [[0, 0, 0], [0, 0, 0], 1])
-  useRopeJoint(j1, j2, [[0, 0, 0], [0, 0, 0], 1])
-  useRopeJoint(j2, j3, [[0, 0, 0], [0, 0, 0], 1])
-  useSphericalJoint(j3, card, [
-    [0, 0, 0],
-    [0, 1.45, 0],
-  ])
+  useRopeJoint(
+    fixed as unknown as RefObject<RapierRigidBody>,
+    j1 as unknown as RefObject<RapierRigidBody>,
+    [[0, 0, 0], [0, 0, 0], 1],
+  )
+  useRopeJoint(
+    j1 as unknown as RefObject<RapierRigidBody>,
+    j2 as unknown as RefObject<RapierRigidBody>,
+    [[0, 0, 0], [0, 0, 0], 1],
+  )
+  useRopeJoint(
+    j2 as unknown as RefObject<RapierRigidBody>,
+    j3 as unknown as RefObject<RapierRigidBody>,
+    [[0, 0, 0], [0, 0, 0], 1],
+  )
+  useSphericalJoint(
+    j3 as unknown as RefObject<RapierRigidBody>,
+    card as unknown as RefObject<RapierRigidBody>,
+    [
+      [0, 0, 0],
+      [0, 1.45, 0],
+    ],
+  )
 
   useEffect(() => {
     if (hovered) {
       document.body.style.cursor = dragged ? 'grabbing' : 'grab'
-      return () => void (document.body.style.cursor = 'auto')
+      return () => {
+        document.body.style.cursor = 'auto'
+      }
     }
   }, [hovered, dragged])
+
+  const stepLerped = (
+    body: RapierRigidBody,
+    lerpedRef: RefObject<THREE.Vector3 | null>,
+    delta: number,
+  ) => {
+    if (!lerpedRef.current)
+      lerpedRef.current = new THREE.Vector3().copy(body.translation())
+
+    const clampedDistance = Math.max(
+      0.1,
+      Math.min(1, lerpedRef.current.distanceTo(body.translation())),
+    )
+    lerpedRef.current.lerp(
+      body.translation(),
+      delta * (minSpeed + clampedDistance * (maxSpeed - minSpeed)),
+    )
+  }
 
   useFrame((state, delta) => {
     if (
@@ -180,10 +228,16 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
       vec.set(state.pointer.x, state.pointer.y, 0.5).unproject(state.camera)
       dir.copy(vec).sub(state.camera.position).normalize()
       vec.add(dir.multiplyScalar(state.camera.position.length()))
-      ;[card, j1, j2, j3, fixed].forEach((ref) => {
-        ref.current?.wakeUp()
+      ;[
+        card.current,
+        j1.current,
+        j2.current,
+        j3.current,
+        fixed.current,
+      ].forEach((rb) => {
+        rb.wakeUp()
       })
-      card.current?.setNextKinematicTranslation({
+      card.current.setNextKinematicTranslation({
         x: vec.x - dragged.x,
         y: vec.y - dragged.y,
         z: vec.z - dragged.z,
@@ -192,38 +246,29 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
 
     if (fixed.current) {
       // Fix most of the jitter when over pulling the card
-      ;[j1, j2].forEach((ref) => {
-        if (!ref.current) return
-        if (!ref.current.lerped)
-          ref.current.lerped = new THREE.Vector3().copy(
-            ref.current.translation(),
-          )
-        const clampedDistance = Math.max(
-          0.1,
-          Math.min(1, ref.current.lerped.distanceTo(ref.current.translation())),
-        )
-        ref.current.lerped.lerp(
-          ref.current.translation(),
-          delta * (minSpeed + clampedDistance * (maxSpeed - minSpeed)),
-        )
-      })
+      stepLerped(j1.current, j1Lerped, delta)
+      stepLerped(j2.current, j2Lerped, delta)
 
       // NOTE: use catmull-rom curve to position the rigid body chain
       curve.points[0].copy(j3.current.translation())
-      curve.points[1].copy(j2.current.lerped)
-      curve.points[2].copy(j1.current.lerped)
+      curve.points[1].copy(j2Lerped.current ?? j2.current.translation())
+      curve.points[2].copy(j1Lerped.current ?? j1.current.translation())
       curve.points[3].copy(fixed.current.translation())
       band.current.geometry.setPoints(curve.getPoints(32)) // interpolate curve with 32 points
 
       // NOTE: Tilt it back towards the screen
       ang.copy(card.current.angvel()) // card.current.angvel() current rotational velocity
       rot.copy(card.current.rotation()) // card.current.rotation() rotation
-      card.current.setAngvel({ x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z }) // slowly spin the y-axis towards the front
+      card.current.setAngvel(
+        { x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z },
+        true,
+      ) // slowly spin the y-axis towards the front
     }
   })
 
-  curve.curveType = 'chordal'
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  curve.curveType = 'centripetal'
+  texture.wrapS = THREE.RepeatWrapping
+  texture.wrapT = THREE.RepeatWrapping
 
   return (
     <>
@@ -252,19 +297,25 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
             position={[0, -1.2, -0.05]}
             onPointerOver={() => hover(true)}
             onPointerOut={() => hover(false)}
-            onPointerUp={(e) => (
-              e.target.releasePointerCapture(e.pointerId), drag(null)
-            )}
+            onPointerUp={(e: ThreeEvent<PointerEvent>) => {
+              ;(
+                e.currentTarget as unknown as HTMLElement
+              ).releasePointerCapture(e.pointerId)
+              drag(null)
+            }}
             // HACK: current point of model (e.point) subtract card's position in space (card.current.translation)
             // the calcuated offset is for the `useFrame` above to calcuate the correct kinematic position
-            onPointerDown={(e) => (
-              e.target.setPointerCapture(e.pointerId),
+            onPointerDown={(e: ThreeEvent<PointerEvent>) => {
+              ;(e.currentTarget as unknown as HTMLElement).setPointerCapture(
+                e.pointerId,
+              )
+              if (!card.current) return
               drag(
                 new THREE.Vector3()
                   .copy(e.point)
                   .sub(vec.copy(card.current.translation())),
               )
-            )}
+            }}
           >
             <mesh geometry={nodes.card.geometry}>
               <meshPhysicalMaterial
@@ -295,13 +346,17 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
       <mesh ref={band}>
         <meshLineGeometry />
         <meshLineMaterial
-          color="white"
           depthTest={false}
-          resolution={[width, height]}
-          useMap
-          map={texture}
-          repeat={[-3, 1]}
-          lineWidth={1}
+          args={[
+            {
+              color: 'white',
+              lineWidth: 1,
+              map: texture,
+              repeat: new THREE.Vector2(-3, 1),
+              resolution: new THREE.Vector2(width, height),
+              useMap: 1,
+            },
+          ]}
         />
       </mesh>
     </>
@@ -315,27 +370,29 @@ function BadgeTexture({
 }) {
   return (
     <Center bottom right>
-      <Resize maxHeight={0.45} maxWidth={0.925}>
-        <Text3D
-          bevelEnabled={false}
-          bevelSize={0}
-          font="/Geist_Regular.json"
-          height={0}
-          rotation={[0, Math.PI, Math.PI]}
-        >
-          {user.firstName}
-        </Text3D>
-        <Text3D
-          bevelEnabled={false}
-          bevelSize={0}
-          font="/Geist_Regular.json"
-          height={0}
-          position={[0, 1.4, 0]}
-          rotation={[0, Math.PI, Math.PI]}
-        >
-          {user.lastName}
-        </Text3D>
-      </Resize>
+      <group scale={0.45}>
+        <Resize height>
+          <Text3D
+            bevelEnabled={false}
+            bevelSize={0}
+            font="/Geist_Regular.json"
+            height={0}
+            rotation={[0, Math.PI, Math.PI]}
+          >
+            {user.firstName}
+          </Text3D>
+          <Text3D
+            bevelEnabled={false}
+            bevelSize={0}
+            font="/Geist_Regular.json"
+            height={0}
+            position={[0, 1.4, 0]}
+            rotation={[0, Math.PI, Math.PI]}
+          >
+            {user.lastName}
+          </Text3D>
+        </Resize>
+      </group>
     </Center>
   )
 }
