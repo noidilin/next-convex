@@ -257,12 +257,18 @@ function Band({ maxSpeed = 50, minSpeed = 10 }) {
       band.current.geometry.setPoints(curve.getPoints(32)) // interpolate curve with 32 points
 
       // NOTE: Tilt it back towards the screen
-      ang.copy(card.current.angvel()) // card.current.angvel() current rotational velocity
-      rot.copy(card.current.rotation()) // card.current.rotation() rotation
-      card.current.setAngvel(
-        { x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z },
-        true,
-      ) // slowly spin the y-axis towards the front
+      const shouldAutoface = Boolean(dragged) || card.current.isMoving()
+      if (shouldAutoface) {
+        ang.copy(card.current.angvel()) // card.current.angvel() current rotational velocity
+        rot.copy(card.current.rotation()) // card.current.rotation() rotation
+        if (Math.abs(rot.y) > 1e-3) {
+          // Nudge towards the front without waking the whole chain.
+          card.current.setAngvel(
+            { x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z },
+            false,
+          )
+        }
+      }
     }
   })
 
