@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import OnboardTag from '@/components/three/onboard-tag'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/convex/_generated/api'
 import { fetchAuthQuery } from '@/lib/auth-server'
 
@@ -20,7 +21,7 @@ export default function Page() {
   return (
     <div className="min-h-screen overflow-hidden">
       <div className="relative mt-16 mb-64 grid items-center gap-10 overflow-hidden rounded-2xl border bg-card/60 lg:mt-20 lg:grid-cols-[1.15fr_0.85fr]">
-        <Suspense fallback={<p>loading...</p>}>
+        <Suspense fallback={<WelcomeTitleSkeleton />}>
           <WelcomeTitle />
         </Suspense>
         <div className="h-[55vh] sm:h-[60vh] lg:h-[70vh]">
@@ -103,6 +104,48 @@ async function WelcomeTitle() {
             <p className="mt-1 text-muted-foreground text-sm">
               Presence and data updates powered by Convex.
             </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function WelcomeTitleSkeleton() {
+  return (
+    <section className="relative overflow-hidden p-8 shadow-sm backdrop-blur-sm sm:p-10">
+      <div className="relative">
+        <div className="flex flex-wrap items-center gap-2">
+          <Skeleton className="h-6 w-20 rounded-full" />
+          <Skeleton className="h-6 w-20 rounded-full" />
+          <Skeleton className="h-6 w-24 rounded-full" />
+        </div>
+
+        <div className="mt-5 space-y-3">
+          <Skeleton className="h-10 w-4/5 sm:h-12" />
+          <Skeleton className="h-10 w-2/3 sm:h-12" />
+        </div>
+
+        <div className="mt-5 space-y-2">
+          <Skeleton className="h-5 w-full max-w-prose" />
+          <Skeleton className="h-5 w-5/6 max-w-prose" />
+        </div>
+
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-36" />
+        </div>
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-2xl border bg-background/60 p-4">
+            <Skeleton className="h-5 w-28" />
+            <Skeleton className="mt-3 h-4 w-full" />
+            <Skeleton className="mt-2 h-4 w-5/6" />
+          </div>
+          <div className="rounded-2xl border bg-background/60 p-4">
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="mt-3 h-4 w-full" />
+            <Skeleton className="mt-2 h-4 w-4/5" />
           </div>
         </div>
       </div>
