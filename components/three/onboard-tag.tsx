@@ -5,7 +5,6 @@ import {
   Environment,
   Lightformer,
   RenderTexture,
-  Resize,
   Text3D,
   useGLTF,
   useTexture,
@@ -359,7 +358,7 @@ function Band({
                 metalness={0.5}
                 roughness={0.3}
               >
-                <RenderTexture attach="map" width={2000} height={2000}>
+                <RenderTexture attach="map">
                   <BadgeTexture user={user} />
                 </RenderTexture>
               </meshPhysicalMaterial>
@@ -396,32 +395,47 @@ function Band({
 function BadgeTexture({ user }: { user: OnboardTagUser }) {
   const nameLine = user?.name?.trim() || 'Anonymous'
   const emailLine = user?.email?.trim() || ''
+  const cacheKey = `${user ? nameLine : 'Log in'}|${user ? emailLine : 'to claim your tag'}`
+
+  const { badgeScale, padX, padY, lineGap } = useControls('Onboard tag badge', {
+    badgeScale: { value: 0.5, min: 0.25, max: 2, step: 0.01 },
+    padX: { value: 0, min: -10, max: 10, step: 0.1 },
+    padY: { value: 11.7, min: 0, max: 50, step: 0.1 },
+    lineGap: { value: 1.5, min: 0, max: 2, step: 0.01 },
+  })
 
   return (
-    <Center bottom right>
-      <group scale={2}>
-        <Resize height width>
-          <Text3D
-            bevelEnabled={false}
-            bevelSize={0}
-            font="/Geist_Regular.json"
-            height={0.5}
-            position={[5.5, 0, 0]}
-            rotation={[0, Math.PI, Math.PI / 2]}
-          >
-            {user ? nameLine : 'Log in'}
-          </Text3D>
-          <Text3D
-            bevelEnabled={false}
-            bevelSize={0}
-            font="/Geist_Regular.json"
-            height={0.5}
-            position={[4, 0, 0]}
-            rotation={[0, Math.PI, Math.PI / 2]}
-          >
-            {user ? emailLine : 'to claim your tag'}
-          </Text3D>
-        </Resize>
+    <Center
+      bottom
+      right
+      cacheKey={cacheKey}
+      scale={badgeScale}
+      position={[padX, padY, 0]}
+    >
+      <group>
+        <group rotation={[0, Math.PI, Math.PI / 2]}>
+          <Center right>
+            <Text3D
+              bevelEnabled={false}
+              font="Syne_ExtraBold_Regular.json"
+              height={0.5}
+            >
+              {user ? nameLine : 'Log in'}
+            </Text3D>
+          </Center>
+
+          <group position={[0, -lineGap, 0]}>
+            <Center right>
+              <Text3D
+                bevelEnabled={false}
+                font="Syne_ExtraBold_Regular.json"
+                height={0.5}
+              >
+                {user ? emailLine : 'to claim your tag'}
+              </Text3D>
+            </Center>
+          </group>
+        </group>
       </group>
     </Center>
   )

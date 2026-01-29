@@ -67,7 +67,13 @@ function WelcomeTitle({ user }: { user: CurrentUser }) {
         </div>
 
         <h1 className="mt-5 font-semibold font-serif text-4xl leading-tight tracking-tight sm:text-5xl">
-          {user ? `Welcome back, ${displayName}.` : 'Welcome to Next Convex.'}
+          {user ? (
+            <span>
+              Welcome back <br /> {displayName}.
+            </span>
+          ) : (
+            <span>Welcome to Next Convex.</span>
+          )}
         </h1>
 
         {user ? (
