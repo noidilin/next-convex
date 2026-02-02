@@ -75,7 +75,7 @@ function WelcomeTitle({ user }: { user: CurrentUser }) {
   const displayName = user?.name ?? user?.email ?? 'there'
 
   return (
-    <section className="relative overflow-hidden p-8 shadow-sm backdrop-blur-sm sm:p-10">
+    <section className="relative overflow-hidden p-8 sm:p-10">
       <div className="relative">
         <div className="flex flex-wrap items-center gap-2 text-accent">
           <Badge variant="outline">Next.js 16</Badge>
@@ -158,7 +158,7 @@ function WelcomeTitle({ user }: { user: CurrentUser }) {
 function HomeHeroSkeleton() {
   return (
     <div className="relative mt-16 mb-64 grid items-center gap-10 overflow-hidden rounded-2xl border bg-card/60 lg:mt-20 lg:grid-cols-[1.15fr_0.85fr]">
-      <section className="relative overflow-hidden p-8 shadow-sm backdrop-blur-sm sm:p-10">
+      <section className="relative overflow-hidden p-8 sm:p-10">
         <div className="relative">
           <div className="flex flex-wrap items-center gap-2">
             <Skeleton className="h-6 w-20 rounded-full" />
